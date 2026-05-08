@@ -16,6 +16,14 @@ const Cargar_PV = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // 1. Validar extensión en el cliente
+        const extension = file.name.split('.').pop().toLowerCase();
+        if (!['xlsx', 'xls', 'csv'].includes(extension)) {
+            toast.error("Formato no soportado. Use .xlsx o .xls");
+            e.target.value = "";
+            return;
+        }
+
         setListoParaSubir(false);
         setArchivoRaw(file);
         setCargando(true);
@@ -25,12 +33,28 @@ const Cargar_PV = () => {
             try {
                 const data = new Uint8Array(event.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
-                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                setTotalRegistros(rawData.length > 0 ? rawData.length - 1 : 0);
                 
-                setListoParaSubir(true);
-                toast.success("Archivo listo para procesar.");
+                // 2. Validar Hoja "Fechas"
+                if (!workbook.SheetNames.includes("Fechas")) {
+                    toast.error("El Excel no tiene la hoja 'Fechas'.");
+                    setArchivoRaw(null);
+                    return;
+                }
+
+                const worksheet = workbook.Sheets["Fechas"];
+                const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                // 3. Validar si hay registros (descontando el header)
+                const filasConDatos = rawData.filter(r => r.length > 0);
+                if (filasConDatos.length <= 1) {
+                    toast.warn("La hoja 'Fechas' parece estar vacía.");
+                    setTotalRegistros(0);
+                } else {
+                    setTotalRegistros(filasConDatos.length - 1);
+                    setListoParaSubir(true);
+                    toast.success("Estructura de archivo válida.");
+                }
+
             } catch (error) {
                 toast.error("Error al leer el archivo Excel.");
                 setArchivoRaw(null);
@@ -62,7 +86,27 @@ const Cargar_PV = () => {
             setListoParaSubir(false);
             setTotalRegistros(0);
         } catch (error) {
-            toast.error("Error al subir el archivo al servidor.");
+            // --- AQUÍ CAPTURAMOS LA ALERTA DE EXCESO DE INTENTOS ---
+            
+            // 1. Si el servidor responde con un error (como el 429 de Rate Limit)
+            if (error.response) {
+                const serverMessage = error.response.data?.message;
+                
+                if (error.response.status === 429) {
+                    // Específicamente cuando excede el límite
+                    toast.error(serverMessage || "Límite de subidas excedido. Espere 10 minutos.", {
+                        position: "top-center", // Lo ponemos al centro para que sea más visible
+                        autoClose: 5000,
+                        theme: "colored"
+                    });
+                } else {
+                    // Otros errores del servidor (ej. archivo inválido)
+                    toast.error(serverMessage || "Error al procesar el archivo.");
+                }
+            } else {
+                // Error de red o conexión
+                toast.error("Error de conexión con el servidor.");
+            }
         } finally {
             setCargando(false);
         }

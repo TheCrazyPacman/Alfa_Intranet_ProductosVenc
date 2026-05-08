@@ -16,15 +16,14 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (error.response) {
-      if (error.response.status === 401) {
-        console.warn("Sesión inválida o expirada. Redirigiendo...");
+      // Si el error es 401 pero NO viene de la ruta de login
+      if (error.response.status === 401 && !error.config.url.includes('/auth/login')) {
+        console.warn("Sesión expirada. Redirigiendo...");
         sessionStorage.clear(); 
-        window.location.href = '/login';
+        window.location.href = '/Intranet/login';
       }
     }
     return Promise.reject(error);

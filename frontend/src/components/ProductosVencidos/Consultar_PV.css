@@ -6,6 +6,8 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    flex: 1;
+    box-sizing: border-box;
 }
 
 .header-consulta {
@@ -79,17 +81,20 @@
 }
 
 .table-scroll-container {
-    position: relative; 
-    overflow: auto;
-    max-height: 600px; /* O el alto que prefieras */
+    flex: 1; /* Esto estira la tabla hasta el fondo de la pantalla sin pasarse */
+    overflow: auto; /* Aquí es donde vivirán tus barras de scroll (lateral y abajo) */
     border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: white;
+    /* Un pequeño margen inferior para que no pegue al borde del monitor */
+    margin-bottom: 5px;
 }
 
 .modern-table {
     width: 100%;
     border-collapse: separate; /* Necesario para bordes redondeados y sticky */
     border-spacing: 0;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     min-width: 1200px; /* Asegura que aparezca el scroll horizontal */
 }
 
@@ -100,7 +105,7 @@
     background-color: #f8f9fa;
     color: #333;
     font-weight: 700;
-    padding: 12px 15px;
+    padding: 8px 10px;
     border-bottom: 2px solid #dee2e6;
     border-right: 1px solid #dee2e6;
     z-index: 10;
@@ -138,10 +143,7 @@
 }
 
 /* Estilo para los ceros o datos importantes */
-.modern-table td:contains("0") {
-    font-weight: bold;
-    color: #999;
-}
+
 
 /* Ajuste del área de carga */
 .loading-wrapper {

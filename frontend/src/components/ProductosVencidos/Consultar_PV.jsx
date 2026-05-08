@@ -121,7 +121,9 @@ const Consultar_PV = () => {
                                         <td className="sticky-col">{index + 1}</td>
                                         
                                         {Object.values(fila).map((valor, i) => (
-                                            <td key={i}>
+                                            <td key={i}
+                                                style={valor === 0 || valor === "0" ? { fontWeight: 'bold', color: '#999' } : {}}
+                                                >
                                                 {valor === 0 ? "0" : String(valor)}
                                             </td>
                                         ))}

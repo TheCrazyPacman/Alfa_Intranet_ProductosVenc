@@ -4,12 +4,12 @@ import api from '../api';
 import './Login.css';
 import ReCAPTCHA from "react-google-recaptcha";
 import logoEmpresa from '../assets/img/logo-corp.jpeg'; 
-
+// 1. Importamos toast
+import { toast } from 'react-toastify';
 
 const Login = () => {
   const [username, setUser] = useState('');
   const [password, setPass] = useState('');
-  const [empresa, setEmpresa] = useState('');
   const [honeypot, setHoneypot] = useState('');
   const [captchaToken, setCaptchaToken] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -20,22 +20,17 @@ const Login = () => {
     e.preventDefault();
     
     if (honeypot !== '') {
-      console.log("Bot detectado");
-      return;
-    }
-
-    if (!empresa) {
-      alert('Por favor, seleccione una empresa de destino.');
       return;
     }
 
     if (!captchaToken) {
-      alert('Por favor, completa el captcha.');
+      // 2. Reemplazamos alert por toast.warn o toast.error
+      toast.warn('Por favor, completa el captcha.');
       return;
     }
+
     setLoading(true);
     try {
-      
       const res = await api.post('/auth/login', { 
         username, 
         password, 
@@ -45,18 +40,30 @@ const Login = () => {
       if (res.data.status === 0) { 
         sessionStorage.setItem('token', res.data.token);
         sessionStorage.setItem('userData', JSON.stringify(res.data.user));
-        sessionStorage.setItem('empresa_destino', empresa);
+        
+        // 3. Opcional: Mensaje de éxito antes de navegar
+        toast.success(`¡Bienvenido, ${res.data.user.nombre}!`);
         navigate('/Inicio');
       }
     } catch (error) {
       const errorMsg = error.response?.data?.message || 'Error de conexión';
-      alert(errorMsg);
+      
+      // 4. Aquí se mostrará "Sin acceso a Intranet" de forma elegante
+      toast.error(errorMsg, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+    });
       
       setCaptchaToken(null);
-        if (recaptchaRef.current) {recaptchaRef.current.reset(); }
+      if (recaptchaRef.current) { recaptchaRef.current.reset(); }
       setPass('');
     } finally {
-      setLoading(false); // Finalizamos carga
+      setLoading(false);
     }
   };
 
@@ -66,7 +73,7 @@ const Login = () => {
         <div className="logo-container">
           <img src={logoEmpresa} alt="Logo Empresa" className="login-logo" />
         </div>
-        {/* Honeypot */}
+        
         <input 
           type="text" 
           name="honeypot" 
@@ -82,45 +89,32 @@ const Login = () => {
           placeholder="Usuario" 
           className="input-style" 
           onChange={(e) => setUser(e.target.value)} 
+          required
         />
         
         <input type="password" 
           placeholder="Contraseña" 
           className="input-style" 
+          value={password}
           onChange={(e) => setPass(e.target.value)} 
+          required
         />
-
-        {/* COMBO DE EMPRESA */}
-        <div style={{ marginBottom: '15px' }}>
-          <select 
-            className="input-style" 
-            value={empresa} 
-            onChange={(e) => setEmpresa(e.target.value)}
-            required
-            style={{ width: '100%', cursor: 'pointer' }}
-          >
-            <option value="" disabled>Seleccione Empresa</option>
-            <option value="Alfa Distribuidores S.A">Alfa Distribuidores S.A</option>
-            <option value="TORU">Toru</option>
-          </select>
-        </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', margin: '15px 0' }}>
           <ReCAPTCHA
-            ref={recaptchaRef} // Conectamos la Ref
+            ref={recaptchaRef}
             sitekey={import.meta.env.VITE_COPIA_CLAVE_SITIO} 
             onChange={(token) => setCaptchaToken(token)}
-            onExpired={() => setCaptchaToken(null)} // Si expira, deshabilitamos el botón
+            onExpired={() => setCaptchaToken(null)}
           />
         </div>
 
         <button 
           type="submit" 
           className="btn-login" 
-          //disabled={!turnstileToken} 
           disabled={!captchaToken || loading}
         >
-          Entrar
+          {loading ? 'Cargando...' : 'Entrar'}
         </button>
       </form>
     </div>

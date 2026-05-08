@@ -56,12 +56,7 @@ body {
   overflow-x: hidden;
 }
 
-#root {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-}
+
 
 h1,
 h2 {
@@ -114,9 +109,23 @@ code {
 html, body {
   margin: 0;
   padding: 0;
-  width: 100%;
-  /* Evita el scroll horizontal */
-  overflow-x: hidden; 
-  /* Mejora la experiencia en móviles */
-  position: relative;
+  width: 100vw;
+  height: 100vh;
+  /* Bloqueamos el scroll en el cuerpo principal */
+  overflow: hidden; 
+  /* Aseguramos que el renderizado de fuentes sea limpio */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  /* Importante: flex permite que los hijos (Layout/Navbar) se distribuyan bien */
+  display: flex;
+  flex-direction: column;
+  /* Bloqueamos cualquier scroll que intente salir de la pantalla principal */
+  overflow: hidden;
 }
