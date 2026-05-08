@@ -1,0 +1,151 @@
+.inicio-container {
+    width: 100%; 
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f0f2f5;
+    position: relative;
+}
+
+
+
+.welcome-section {
+    background: white;
+    padding: 40px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+
+.widget-placeholder {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px dashed #ddd;
+    color: #999;
+}
+
+
+
+.widgets-row {
+    display: flex;
+    flex-wrap: wrap; /* Permite que bajen si no hay espacio */
+    gap: 20px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px; /* Escondido por defecto */
+    width: 280px;
+    height: 100%;
+    background-color: #070707; /* Color oscuro para que resalten los botones */
+    transition: all 0.3s ease-in-out;
+    z-index: 1100; /* Por encima de la main-header */
+    display: flex;
+    flex-direction: column;
+    padding-top: 80px; /* Espacio para que el Header no tape los botones */
+    box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+}
+
+/* Cuando le das click a las 3 rayas, Inicio.jsx le pone esta clase */
+.sidebar.open {
+    left: 0;
+}
+
+/* Estilo de los botones dentro del Sidebar (Tus cuadros feos ahora son filas) */
+.sidebar button {
+    background: none;
+    border: none;
+    color: #ffffff;
+    padding: 15px 25px;
+    text-align: left;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 1px solid #34495e;
+    transition: background 0.2s;
+    width: 100%; /* Que ocupen todo el ancho del menú */
+}
+
+.sidebar button:hover {
+    background-color: #3e5871;
+    color: #3498db;
+}
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1050; /* Entre el contenido y la sidebar */
+}
+
+.main-content {
+    /* Antes: max-width: 1200px; */
+    /*max-width: 90%; /* Esto deja un pequeño margen estético a los lados */
+    /*margin: 30px auto
+    width: 100%
+    padding: 0 20px
+    flex: 1*/
+    margin: 0 auto; /* Centrado horizontal estándar */
+    padding: 40px;
+    width: 100%;
+    display: flex;
+    justify-content: center; /* Esto centrará los componentes hijos como CargarProductos */
+    align-items: flex-start;
+    min-height: 80vh;
+}
+
+.welcome-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centra horizontalmente los hijos */
+    justify-content: center; /* Centra verticalmente si hay espacio */
+    text-align: center;
+    margin: 100px auto; /* El 'auto' lo centra horizontalmente */
+    width: 100%;
+    max-width: 800px; /* Evita que el texto se estire demasiado */
+}
+.welcome-container h1 {
+    font-size: clamp(1.5rem, 5vw, 2.5rem); /* Tamaño fluido: min, ideal, max */
+    line-height: 1.2; /* Espacio suficiente entre líneas */
+    margin-bottom: 15px;
+    word-wrap: break-word; /* Fuerza el salto de línea si la palabra es muy larga */
+    padding: 0 10px; /* Evita que el texto toque los bordes en móviles */
+    color: #2c3e50;
+}
+
+.welcome-container p {
+    font-size: clamp(0.9rem, 2vw, 1.1rem);
+    line-height: 1.5;
+    color: #666;
+}
+
+.no-break-zone {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+/* El nombre en azul */
+.user-name {
+    color: #0056b3;
+    font-weight: bold;
+}
+
+/* El signo en negro/gris oscuro */
+.exclamation-mark {
+    color: #2c3e50; /* O el color exacto de tu texto "¡Bienvenido(a)," */
+    font-weight: bold;
+}
+
+/* Ajuste para el H1 principal */
+.welcome-container h1 {
+    line-height: 1.4; /* Espacio para que si bajan de línea no se choquen */
+    text-align: center;
+}
