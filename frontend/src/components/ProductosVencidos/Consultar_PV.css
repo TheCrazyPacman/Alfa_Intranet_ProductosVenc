@@ -176,3 +176,16 @@
 .sticky-col {
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
 }
+
+/*:v*/
+
+.modern-table thead th:hover {
+    background-color: #34495e !important;
+    color: #00d1b2 !important;
+    transition: 0.2s;
+}
+
+/* Opcional: Resaltar específicamente la columna de Vencimiento para que sepan que es especial */
+.modern-table thead th:nth-child(2) { /* Ajusta el número según la posición de Vencimiento */
+    border-left: 2px solid #3498db;
+}

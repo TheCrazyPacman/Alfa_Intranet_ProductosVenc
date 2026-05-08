@@ -7,6 +7,7 @@ const Consultar_PV = () => {
     const [datos, setDatos] = useState([]);
     const [cargando, setCargando] = useState(false);
     const [nombreArchivo, setNombreArchivo] = useState("Reporte_Productos_Vencidos.xlsx");
+    const [orden, setOrden] = useState({ columna: 'VENCIMIENTO', direccion: 'asc' });
 
     const obtenerDatosVencimiento = async () => {
         setCargando(true);
@@ -83,6 +84,33 @@ const Consultar_PV = () => {
         }
     };
 
+    const manejarOrden = (nombreColumna) => {
+        const nuevaDireccion = orden.columna === nombreColumna && orden.direccion === 'asc' ? 'desc' : 'asc';
+        setOrden({ columna: nombreColumna, direccion: nuevaDireccion });
+
+        const copiaDatos = [...datos].sort((a, b) => {
+            let valA = a[nombreColumna];
+            let valB = b[nombreColumna];
+
+            // Lógica específica para fechas DD/MM/YYYY
+            if (nombreColumna.toUpperCase() === 'VENCIMIENTO') {
+                const convertirFecha = (str) => {
+                    if (!str) return 0;
+                    const [d, m, y] = str.split('/').map(Number);
+                    return new Date(y, m - 1, d).getTime();
+                };
+                valA = convertirFecha(valA);
+                valB = convertirFecha(valB);
+            }
+
+            if (valA < valB) return nuevaDireccion === 'asc' ? -1 : 1;
+            if (valA > valB) return nuevaDireccion === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        setDatos(copiaDatos);
+    };
+
     return (
         <div className="consultar-container">
             <ToastContainer />
@@ -105,11 +133,24 @@ const Consultar_PV = () => {
                     <table className="modern-table">
                         <thead>
                             <tr>
-                                {/* Asegúrate de escribir el nombre aquí claramente */}
                                 <th className="sticky-col">List</th> 
                                 
                                 {datos.length > 0 && Object.keys(datos[0]).map((columna) => (
-                                    <th key={columna}>{columna}</th>
+                                    <th 
+                                        key={columna} 
+                                        onClick={() => manejarOrden(columna)}
+                                        style={{ cursor: 'pointer', userSelect: 'none' }}
+                                        className="header-ordenable"
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                                            {columna}
+                                            <span style={{ fontSize: '0.8rem', color: orden.columna === columna ? '#00d1b2' : '#ccc' }}>
+                                                {orden.columna === columna 
+                                                    ? (orden.direccion === 'asc' ? '▲' : '▼') 
+                                                    : '↕'}
+                                            </span>
+                                        </div>
+                                    </th>
                                 ))}
                             </tr>
                         </thead>
@@ -117,13 +158,12 @@ const Consultar_PV = () => {
                             {datos.length > 0 ? (
                                 datos.map((fila, index) => (
                                     <tr key={index}>
-                                        {/* Añadimos la clase sticky-col a la celda del índice */}
                                         <td className="sticky-col">{index + 1}</td>
                                         
                                         {Object.values(fila).map((valor, i) => (
                                             <td key={i}
                                                 style={valor === 0 || valor === "0" ? { fontWeight: 'bold', color: '#999' } : {}}
-                                                >
+                                            >
                                                 {valor === 0 ? "0" : String(valor)}
                                             </td>
                                         ))}
