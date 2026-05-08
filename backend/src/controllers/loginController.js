@@ -27,7 +27,7 @@ const login = async (req, res) => {
         const result = await pool.request()
             .input('ID_USUARIO', sql.Char(21), username)
             .input('USU_PASSWORD', sql.NChar(20), password) // Reincorporado
-            .execute('dbo.usp_Usuarios_Login_ValLogUsr_PRB');
+            .execute('dbo.usp_Usuarios_Login_Intranet_PRB');
 
         const row = result.recordset[0];
 
@@ -48,7 +48,7 @@ const login = async (req, res) => {
             return res.json({
                 status: 0,
                 token: token,
-                user: { nombre: nombreFinal, email: correoFinal, rol: 'Proveedor', ruc: rucFinal }
+                user: { nombre: nombreFinal, email: correoFinal, rol: 'Interno', ruc: rucFinal }
             });
         } else {
             // El mensaje viene directamente del SP (Ej: "Password Incorrecto")
