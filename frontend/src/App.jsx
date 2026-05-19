@@ -42,8 +42,9 @@ function App() {
       <ToastContainer 
         position="top-right"
         autoClose={4000}
+        limit={3}
         hideProgressBar={false}
-        newestOnTop={false}
+        newestOnTop={true}
         closeOnClick
         rtl={false}
         pauseOnFocusLoss

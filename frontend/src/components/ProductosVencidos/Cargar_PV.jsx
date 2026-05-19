@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import api from '../../api';
 // 1. Importamos ToastContainer y los estilos
-import { toast, ToastContainer } from 'react-toastify';
+import { toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; 
 import './Cargar_PV.css';
 
@@ -115,7 +115,7 @@ const Cargar_PV = () => {
     return (
         <div className="module-page-container">
             {/* 2. Añadimos el contenedor aquí */}
-            <ToastContainer position="top-right" autoClose={3000} />
+            
 
             <div className="upload-card">
                 <header className="card-header">

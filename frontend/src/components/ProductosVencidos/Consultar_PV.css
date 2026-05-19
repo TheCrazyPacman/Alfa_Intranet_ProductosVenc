@@ -152,29 +152,24 @@
 }
 .modern-table thead th.sticky-col {
     position: sticky;
-    left: 0;
-    top: 0;           /* Se mantiene arriba */
-    z-index: 30;      /* Prioridad máxima (encima de todo) */
-    background-color: #2c3e50 !important; /* El azul oscuro de tu proyecto */
-    color: #ffffff !important;           /* Texto blanco puro */
+    top: 0;           /* Se queda arriba al bajar */
+    z-index: 40;      /* Por encima de las celdas del cuerpo */
+    background-color: #2c3e50 !important;
+    color: #ffffff !important;
     text-align: center;
-    padding: 12px 15px;
-    border-right: 2px solid #34495e;
-    min-width: 60px;
+    border-right: 1px solid #34495e;
 }
 
 .modern-table tbody td.sticky-col {
     position: sticky;
-    left: 0;
-    z-index: 10;
-    background-color: #f0f7ff !important; /* Fondo azul claro */
-    color: #000000 !important;           /* Texto azul fuerte */
-    font-weight: bold;
+    z-index: 10;      /* Por encima de las otras celdas al hacer scroll lateral */
+    background-color: #f8f9fa !important;
+    color: #333 !important;
+    border-right: 1px solid #dee2e6;
     text-align: center;
-    border-right: 2px solid #dee2e6;
 }
 .sticky-col {
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
 }
 
 /*:v*/
@@ -188,4 +183,118 @@
 /* Opcional: Resaltar específicamente la columna de Vencimiento para que sepan que es especial */
 .modern-table thead th:nth-child(2) { /* Ajusta el número según la posición de Vencimiento */
     border-left: 2px solid #3498db;
+}
+
+.titulo-seccion h2 {
+    margin-bottom: 5px;
+}
+
+.fecha-actualizacion {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 0;
+    font-style: italic;
+}
+
+.fecha-actualizacion strong {
+    color: #2c3e50;
+}
+
+/* Asegura que el contenido sea visible dentro de las columnas fijas */
+.modern-table th.sticky-col {
+    background-color: #2c3e50 !important;
+    color: white !important;
+    z-index: 45; /* Mayor que las celdas del cuerpo */
+    border-right: 1px solid #34495e;
+}
+.modern-table td.col-indice {
+    background-color: #f8f9fa !important; /* Fondo gris muy claro */
+    color: #555 !important;               /* Texto gris oscuro, no negro puro */
+    font-weight: 600 !important;
+    text-align: center;
+    border-right: 2px solid #dee2e6 !important; /* Línea divisoria más gruesa */
+    font-size: 0.8rem;
+    width: 55px;
+}
+.modern-table td.sticky-col:first-child {
+    background-color: #ffffff !important; 
+    border-right: 1px solid #eee;
+}
+.row-selected td.col-indice {
+    background-color: #ffe8cc !important; /* Un naranja muy tenue para resaltar */
+    color: #e67e22 !important;
+}
+.modern-table td.sticky-col {
+    background-color: #2c3e50 !important; /* Color oscuro para el header */
+    color: white;
+    padding: 0 !important; /* Quita el padding para que el checkbox no se pierda */
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* El cuerpo de la tabla (td) debe tener fondo blanco para no ser transparente */
+.modern-table td.sticky-col {
+    background-color: #f8f9fa !important;
+    color: #333;
+}
+
+/* Fuerza el tamaño de los checkboxes */
+.modern-table input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.row-selected {
+    background-color: #fff4e5 !important; /* Naranja muy suave */
+}
+.row-selected td {
+    background-color: transparent !important; /* Para que brille el color de la fila */
+}
+.input-observacion-estilo {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.input-observacion-estilo:focus {
+    border-color: #e67e22;
+    box-shadow: 0 0 4px rgba(230, 126, 34, 0.2);
+}
+
+.input-observacion-estilo:disabled {
+    background-color: transparent;
+    border-color: transparent;
+    color: #999;
+    cursor: not-allowed;
+}
+
+/* 4. BOTÓN DE REPORTE (Aparece al lado de descargar) */
+.btn-reportar {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.btn-reportar:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
 }

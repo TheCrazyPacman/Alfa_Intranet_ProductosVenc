@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import api from '../../api';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import './Consultar_PV.css';
 
 const Consultar_PV = () => {
@@ -8,8 +8,18 @@ const Consultar_PV = () => {
     const [cargando, setCargando] = useState(false);
     const [nombreArchivo, setNombreArchivo] = useState("Reporte_Productos_Vencidos.xlsx");
     const [orden, setOrden] = useState({ columna: 'VENCIMIENTO', direccion: 'asc' });
+    const [fechaActualizacion, setFechaActualizacion] = useState(null);
+    const [seleccionados, setSeleccionados] = useState([]); // Guardará los índices de las filas
+    const [observaciones, setObservaciones] = useState({}); // Guardará { index: 'texto' }
+    
+    const [permisos, setPermisos] = useState({ 
+        puedeSeleccionar: false, 
+        puedeVerObservaciones: false, 
+        puedeReportar: false 
+    });
 
     const obtenerDatosVencimiento = async () => {
+        toast.dismiss();
         setCargando(true);
         try {
             const token = sessionStorage.getItem('token');
@@ -17,9 +27,11 @@ const Consultar_PV = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
-            if (response.data.contenido && response.data.contenido.length > 0) {
+            if (response.data.contenido) {
                 setDatos(response.data.contenido);
                 setNombreArchivo(response.data.nombreArchivoOriginal);
+                setFechaActualizacion(response.data.fechaCarga);
+                setPermisos(response.data.permisos);
                 toast.success("Datos cargados.");
             } else {
                 // Si el backend responde pero el contenido está vacío
@@ -109,13 +121,78 @@ const Consultar_PV = () => {
         });
 
         setDatos(copiaDatos);
+        setSeleccionados([]); 
+        setObservaciones({});
+    };
+
+    const haySeleccionados = seleccionados.length > 0;
+
+    const handleReportar = async () => {
+        if (seleccionados.length === 0) return;
+
+        const productosParaReportar = seleccionados.map(index => {
+            const fila = datos[index];
+            
+            // Buscador flexible que ignora mayúsculas, minúsculas y tildes básicas
+            const getVal = (posiblesNombres) => {
+                const keyEncontrada = Object.keys(fila).find(k => 
+                    posiblesNombres.some(nombre => 
+                        k.trim().toUpperCase() === nombre.toUpperCase()
+                    )
+                );
+                return fila[keyEncontrada] !== undefined ? fila[keyEncontrada] : 'N/A';
+            };
+
+            return {
+                // Mapeamos a las llaves que espera el emailTemplates.js
+                codigo: getVal(['CODIGO', 'CÓDIGO', 'ITEM']), 
+                descripcion: getVal(['DESCRIPCION', 'DESCRIPCIÓN', 'PRODUCTO']),
+                conteo: getVal(['CONTEO', 'CANTIDAD', 'FISICO']),
+                sistema: getVal(['SISTEMA', 'STOCK']),
+                vencimiento: getVal(['VENCIMIENTO', 'FECHA VENCIMIENTO']),
+                dif: getVal(['DIF', 'DIFERENCIA']),
+                proveedor: getVal(['PROVEEDOR', 'LABORATORIO']),
+                observacion: observaciones[index] || "Sin observaciones"
+            };
+        });
+
+        toast.info("Enviando reporte...");
+        setCargando(true);
+
+        try {
+            const token = sessionStorage.getItem('token');
+            await api.post('/productos/reportar-observaciones', 
+                { productos: productosParaReportar },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            toast.success(`Reporte enviado correctamente.`);
+            
+            // Limpiar selección tras éxito
+            setSeleccionados([]);
+            setObservaciones({});
+        } catch (error) {
+            console.error("Error al enviar reporte:", error);
+            toast.error("No se pudo enviar el reporte.");
+        } finally {
+            setCargando(false);
+        }
     };
 
     return (
         <div className="consultar-container">
-            <ToastContainer />
+            
             <div className="header-consulta">
-                <h2>Consulta de Productos a Vencer </h2>
+                <div className="titulo-seccion">
+                    <h2>Consulta de Productos a Vencer</h2>
+                    {fechaActualizacion && (
+                        <p className="fecha-actualizacion">
+                            Actualizado al: <strong>{new Date(fechaActualizacion).toLocaleString('es-PE')}</strong>
+                            <br /><span>Archivo: 📄 {nombreArchivo}</span>
+                        </p>
+                        
+                    )}
+                </div>
                 <div className="button-group">
                     <button className="btn-consultar" onClick={obtenerDatosVencimiento} disabled={cargando}>
                         🔍 Consultar Productos
@@ -123,6 +200,28 @@ const Consultar_PV = () => {
                     <button className="btn-descargar" onClick={handleDescargar} disabled={cargando}>
                         📥 Descargar Excel
                     </button>
+                    {permisos.puedeReportar && haySeleccionados && (
+                        <button 
+                            className="btn-reportar" 
+                            onClick={handleReportar}
+                            // Bloquea el botón si cargando es true
+                            disabled={cargando} 
+                            style={{ 
+                                // Si está cargando se pone gris, si no, naranja
+                                backgroundColor: cargando ? '#95a5a6' : '#e67e22', 
+                                color: 'white', 
+                                cursor: cargando ? 'not-allowed' : 'pointer',
+                                animation: 'fadeIn 0.3s',
+                                transition: 'background-color 0.3s ease' // Suaviza el cambio de color
+                            }}
+                        >
+                            {cargando ? (
+                                <>⏳ Enviando reporte...</>
+                            ) : (
+                                <>🚩 Reportar Observaciones ({seleccionados.length})</>
+                            )}
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -133,50 +232,120 @@ const Consultar_PV = () => {
                     <table className="modern-table">
                         <thead>
                             <tr>
-                                <th className="sticky-col">List</th> 
+                                {/* COLUMNA SELECCIÓN (Sticky en 0px) */}
+                                {permisos.puedeSeleccionar && (
+                                    <th className="sticky-col" style={{ left: '0', zIndex: 40, width: '45px', minWidth: '45px' }}>
+                                        <input 
+                                            type="checkbox" 
+                                            onChange={(e) => {
+                                                if (e.target.checked) setSeleccionados(datos.map((_, i) => i));
+                                                else setSeleccionados([]);
+                                            }}
+                                        />
+                                    </th>
+                                )}
+
+                                {/* COLUMNA LIST (Sticky en 45px) */}
+                                <th className="sticky-col col-indice" style={{ 
+                                    left: permisos.puedeSeleccionar ? '45px' : '0', 
+                                    zIndex: 40, width: '55px' 
+                                }}>
+                                    List
+                                </th>
                                 
-                                {datos.length > 0 && Object.keys(datos[0]).map((columna) => (
+                                {/* COLUMNAS DINÁMICAS */}
+                                {datos.length > 0 && Object.keys(datos[0])
+                                // Filtramos para eliminar columnas vacías o sin nombre real
+                                .filter(columna => columna && !columna.startsWith('__EMPTY') && columna.trim() !== "")
+                                .map((columna) => (
                                     <th 
                                         key={columna} 
                                         onClick={() => manejarOrden(columna)}
-                                        style={{ cursor: 'pointer', userSelect: 'none' }}
                                         className="header-ordenable"
                                     >
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                                             {columna}
                                             <span style={{ fontSize: '0.8rem', color: orden.columna === columna ? '#00d1b2' : '#ccc' }}>
-                                                {orden.columna === columna 
-                                                    ? (orden.direccion === 'asc' ? '▲' : '▼') 
-                                                    : '↕'}
+                                                {orden.columna === columna ? (orden.direccion === 'asc' ? '▲' : '▼') : '↕'}
                                             </span>
                                         </div>
                                     </th>
                                 ))}
+
+                                {/* COLUMNA OBSERVACIÓN */}
+                                {permisos.puedeVerObservaciones && <th style={{ minWidth: '200px' }}>Observación</th>}
                             </tr>
                         </thead>
                         <tbody>
-                            {datos.length > 0 ? (
-                                datos.map((fila, index) => (
-                                    <tr key={index}>
-                                        <td className="sticky-col">{index + 1}</td>
-                                        
-                                        {Object.values(fila).map((valor, i) => (
-                                            <td key={i}
-                                                style={valor === 0 || valor === "0" ? { fontWeight: 'bold', color: '#999' } : {}}
-                                            >
-                                                {valor === 0 ? "0" : String(valor)}
+                        {datos.length > 0 ? (
+                            datos.map((fila, index) => {
+                                const estaSeleccionado = seleccionados.includes(index);
+                                return (
+                                    <tr key={index} className={estaSeleccionado ? 'row-selected' : ''}>
+                                        {/* 1. Checkbox (Sticky left 0) */}
+                                        {permisos.puedeSeleccionar && (
+                                            <td className="sticky-col" style={{ left: '0', textAlign: 'center', minWidth: '45px' }}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={estaSeleccionado}
+                                                    onChange={() => {
+                                                        setSeleccionados(prev => 
+                                                            prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+                                                        );
+                                                    }}
+                                                />
                                             </td>
-                                        ))}
+                                        )}
+
+                                        {/* 2. Número de lista (Sticky left 45px) */}
+                                        <td className="sticky-col" style={{ 
+                                                left: permisos.puedeSeleccionar ? '45px' : '0', 
+                                                fontWeight: 'bold' 
+                                        }}>
+                                            {index + 1}
+                                        </td>
+                                        
+                                        {/* 3. Datos del Excel (FILTRADOS) */}
+                                        {Object.keys(fila)
+                                            .filter(key => key && !key.startsWith('__EMPTY') && key.trim() !== "")
+                                            .map((key, i) => {
+                                                const valor = fila[key];
+                                                return (
+                                                    <td key={i} style={valor === 0 || valor === "0" ? { fontWeight: 'bold', color: '#999' } : {}}>
+                                                        {valor === 0 ? "0" : String(valor)}
+                                                    </td>
+                                                );
+                                            })
+                                        }
+
+                                        {/* 4. Input de Observación */}
+                                        {permisos.puedeVerObservaciones && (
+                                            <td>
+                                                <input 
+                                                    type="text"
+                                                    placeholder="Añadir nota..."
+                                                    disabled={!estaSeleccionado}
+                                                    value={observaciones[index] || ""}
+                                                    onChange={(e) => setObservaciones({
+                                                        ...observaciones, 
+                                                        [index]: e.target.value 
+                                                    })}
+                                                    className="input-observacion-estilo"
+                                                />
+                                            </td>
+                                        )}
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="10" className="empty-row">
-                                        Presione el botón de consulta para obtener datos actualizados.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
+                                );
+                            })
+                        ) : (
+                            <tr>
+                                {/* Ajuste dinámico del colSpan para el mensaje de vacío */}
+                                <td colSpan={Object.keys(datos[0] || {}).filter(k => k && !k.startsWith('__EMPTY') && k.trim() !== "").length + 3} className="empty-row">
+                                    Presione el botón de consulta para obtener datos actualizados.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
                     </table>
                 </div>
             )}
