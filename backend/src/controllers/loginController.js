@@ -9,7 +9,7 @@ const login = async (req, res) => {
     
     console.log("--------------------------------");
     console.log(`🔑 Intento de login: ${username}`);
-    
+
     try {
         
         
@@ -36,9 +36,8 @@ const login = async (req, res) => {
             const nombreFinal = row.NOMBRE ? row.NOMBRE.trim() : username;
             const correoFinal = row.MAIL ? row.MAIL.trim() : '';
             const rucFinal = username.trim();
-            
             const token = jwt.sign(
-                { id: rucFinal, 
+                { id: rucFinal,
                     nombre: nombreFinal, 
                     email: correoFinal }, 
                 SECRET_KEY, 

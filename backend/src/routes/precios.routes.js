@@ -5,6 +5,7 @@ const path = require('path'); // Importante para manejar extensiones si fuera ne
 const productosV = require('../controllers/productosVController');
 const verificarToken = require('../middleware/validateJWT'); 
 const rateLimit = require('express-rate-limit');
+const email = require('../controllers/emailController');
 
 // --- CONFIGURACIÓN DE ALMACENAMIENTO PERSONALIZADO ---
 const storage = multer.diskStorage({
@@ -34,4 +35,6 @@ router.post('/actualizar-vencidos',
 
 router.get('/consultar-vencidos', verificarToken, productosV.consultarVencidos);
 router.get('/descargar-vencidos', verificarToken, productosV.descargarVencidos);
+router.post('/reportar-observaciones', verificarToken, email.reportarObservaciones);
+
 module.exports = router;

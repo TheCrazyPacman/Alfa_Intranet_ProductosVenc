@@ -9,7 +9,7 @@ const verificarToken = (req, res, next) => {
 
     const tokenLimpio = token.startsWith('Bearer ') ? token.slice(7) : token;
 
-    jwt.verify(tokenLimpio, process.env.JWT_SECRET || 'intranet_secreta_2026', (err, decoded) => {
+    jwt.verify(tokenLimpio, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
             return res.status(401).json({ auth: false, message: 'Token inválido o expirado.' });
         }

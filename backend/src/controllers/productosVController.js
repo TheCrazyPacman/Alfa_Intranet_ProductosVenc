@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
+const verificarToken = require('../middleware/validateJWT');
 
 const actualizarProductosVencidos = async (req, res) => {
     try {
@@ -31,20 +32,46 @@ const actualizarProductosVencidos = async (req, res) => {
     }
 };
 
+const obtenerPermisosUsuario = async (username) => {
+    // Aquí es donde harás un SELECT a tu base de datos después
+    // Por ahora, mantenemos la lógica centralizada aquí
+    if (username === 'adminportal') {
+        return {
+            puedeReportar: true,
+            puedeVerObservaciones: true,
+            puedeSeleccionar: true
+        };
+    }
+    return {
+        puedeReportar: false,
+        puedeVerObservaciones: false,
+        puedeSeleccionar: false
+    };
+};
+
 const consultarVencidos = async (req, res) => {
     try {
+        const usuarioActivo = req.userId;
+        console.log(`🔍 Verificando permisos para: ${usuarioActivo}`);
         const directory = path.resolve(__dirname, '../../uploads');
         const files = fs.readdirSync(directory);
-        
         console.log("1. Archivos en carpeta uploads:", files);
 
+        const permisos = await obtenerPermisosUsuario(usuarioActivo);
         if (files.length === 0) {
             console.log("❌ Error: No hay archivos físicamente en la carpeta uploads.");
-            return res.json({ contenido: [] });
+            return res.json({ 
+                contenido: [], 
+                fechaCarga: null, 
+                permisos // Enviamos permisos aunque no haya datos
+            });
         }
 
         const filePath = path.join(directory, files[0]);
         console.log("2. Leyendo archivo en ruta:", filePath);
+        //Obtener metadatos del archivo
+        const stats = fs.statSync(filePath);
+        const fechaModificacion = stats.mtime; // mtime es la fecha
 
         const workbook = XLSX.readFile(filePath, { cellDates: true });
         console.log("3. Hojas detectadas en el Excel:", workbook.SheetNames);
@@ -60,7 +87,7 @@ const consultarVencidos = async (req, res) => {
         
         if (rows.length === 0) {
             console.log("❌ Error: La hoja está totalmente vacía.");
-            return res.json({ contenido: [] });
+            return res.json({ contenido: [], permisos });
         }
 
         // ... resto de tu lógica de mapeo ...
@@ -71,8 +98,6 @@ const consultarVencidos = async (req, res) => {
                 let obj = {};
                 headers.forEach((h, i) => {
                     let valor = row[i];
-                    // Si el valor es estrictamente null o undefined, ponemos vacío. 
-                    // Si es 0, conservamos el 0.
                     obj[h] = (valor === null || valor === undefined) ? "" : valor;
                     
                     // Formatear fechas si detectamos que es un objeto Date
@@ -84,7 +109,8 @@ const consultarVencidos = async (req, res) => {
             });
 
         console.log("5. Filas procesadas con éxito:", contenido.length);
-        res.json({ nombreArchivoOriginal: files[0], contenido });
+        res.json({ nombreArchivoOriginal: files[0], contenido, fechaCarga: fechaModificacion, permisos });
+
 
     } catch (error) {
         console.error("❌ Error CRÍTICO en el Backend:", error.message);
